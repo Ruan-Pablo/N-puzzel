@@ -1,17 +1,30 @@
 import random
 from collections import deque
 
+def getPosicaoPecaVazia(tabuleiro):
+    for linha in range(len(tabuleiro)):
+        for coluna in range(3):
+            if tabuleiro[linha][coluna] == 0:
+                return linha, coluna
 
 class Tabuleiro:
-    def __init__(self, tamanho_matriz) -> list:    
-        numeros = list(range(1, tamanho_matriz**2)) # Gera uma lista com os números de 1 a n^2 - 1
-        numeros.append(0) # Adiciona o espaço vazio representado por 0
-        random.shuffle(numeros) # Embaralha os números
-        tabuleiro = []
-        for i in range(0, tamanho_matriz**2, tamanho_matriz): # Divide a lista em sublistas para representar as linhas do tabuleiro
-            linha = numeros[i:i+tamanho_matriz]
-            tabuleiro.append(linha)
-        return tabuleiro  # Implemente a classe Tabuleiro conforme necessário
+    def __init__(self) -> None:
+        self.tabuleiro = None
+
+    def setTabuleiro(self, tabuleiro):
+        self.tabuleiro = tabuleiro
+    def getTabuleiro(self):
+        return self.tabuleiro
+
+    def sobe(self):
+        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
+        aux = self.getTabuleiro()[pos_zero[0]][pos_zero[1] - 1]  # elemento acima do zero
+        self.tabuleiro
+
+    def criar_tabuleiro(self, tamanho_matriz: int):    
+        estado_meta = self.criarEstadoMeta(tamanho_matriz)
+
+        self.tabuleiro = tabuleiro[:]
     
     def ehObjetivo(self, tabuleiro:list):
         tamanho = len(tabuleiro)
@@ -25,7 +38,7 @@ class Tabuleiro:
                 linha_meta.append(valor)
             matriz_meta.append(linha_meta)
 
-        return matriz_meta
+        return matriz_meta == tabuleiro
     
     def criarEstadoMeta(self, tamanho):
         estado_meta = []
@@ -40,6 +53,20 @@ class Tabuleiro:
             estado_meta.append(linha_meta)
 
         return estado_meta
+    
+    def criar_matriz_objetivo(self, tamanho):
+        matriz_objetivo = []
+
+        for linha in range(tamanho):
+            linha_objetivo = []
+            for coluna in range(tamanho):
+                valor = linha * tamanho + coluna + 1
+                if valor == tamanho * tamanho:
+                    valor = 0
+                linha_objetivo.append(valor)
+            matriz_objetivo.append(linha_objetivo)
+
+        return matriz_objetivo
 
 
 class No:
@@ -108,9 +135,9 @@ class No:
         return movimentos
 
     def getPosicaoPecaVazia(self):
-        for linha in range(3):
+        for linha in range(len(self.tabuleiro)):
             for coluna in range(3):
-                if self.tabuleiro.m[linha][coluna] == 0:
+                if self.tabuleiro[linha][coluna] == 0:
                     return linha, coluna
 
     # def representacaoDoTabuleiro(self):
@@ -154,3 +181,12 @@ class BuscaEmLargura:
     # Exemplo de uso
     # estado_inicial = ...
     # estado_objetivo = busca_em_largura(estado_inicial)
+
+tabuleiro = Tabuleiro()
+tabuleiro.criar_tabuleiro(8)
+print(tabuleiro.getTabuleiro())
+puzzel = No()
+puzzel.setTabuleiro(tabuleiro.getTabuleiro())
+
+print(puzzel.movimentosPossiveis())
+
