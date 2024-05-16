@@ -7,42 +7,83 @@ def getPosicaoPecaVazia(tabuleiro):
             if tabuleiro[linha][coluna] == 0:
                 return linha, coluna
 
+def ehObjetivo(tabuleiro):
+    tamanho = len(tabuleiro)
+    estado_meta = []
+    for linha in range(tamanho):
+        linha_meta = []
+        for coluna in range(tamanho):
+            valor = linha * tamanho + coluna + 1
+            if valor == tamanho * tamanho:
+                valor = 0
+            linha_meta.append(valor)
+        estado_meta.append(linha_meta)
+    return estado_meta == tabuleiro
+
 class Tabuleiro:
     def __init__(self) -> None:
         self.tabuleiro = None
+        self.estado_meta = None
 
     def setTabuleiro(self, tabuleiro):
         self.tabuleiro = tabuleiro
     def getTabuleiro(self):
         return self.tabuleiro
 
-    def sobe(self):
+    def printarTabuleiro(self):
+        for i in self.tabuleiro:
+            print(i)
+    
+    def subir(self):
         pos_zero = getPosicaoPecaVazia(self.tabuleiro)
-        aux = self.getTabuleiro()[pos_zero[0]][pos_zero[1] - 1]  # elemento acima do zero
-        self.tabuleiro
+        if pos_zero[0] > 0:
+            aux = self.tabuleiro[pos_zero[0] - 1][pos_zero[1]] 
+            self.tabuleiro[pos_zero[0]][pos_zero[1]] = aux
+            self.tabuleiro[pos_zero[0] - 1][pos_zero[1]] = 0
+        
+    def descer(self):
+        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
+        if pos_zero[0] < (len(self.tabuleiro) - 1):
+            aux = self.tabuleiro[pos_zero[0] + 1][pos_zero[1]] 
+            self.tabuleiro[pos_zero[0]][pos_zero[1]] = aux
+            self.tabuleiro[pos_zero[0] + 1][pos_zero[1]] = 0
+            
+    def direitar(self):
+        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
+        if pos_zero[1] < (len(self.tabuleiro) - 1):
+            aux = self.tabuleiro[pos_zero[0]][pos_zero[1] + 1] 
+            self.tabuleiro[pos_zero[0]][pos_zero[1]] = aux
+            self.tabuleiro[pos_zero[0]][pos_zero[1] + 1] = 0
+            # print(getPosicaoPecaVazia(self.tabuleiro))
+
+    def esquerdar(self):
+        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
+        if pos_zero[1] > 0:
+            aux = self.tabuleiro[pos_zero[0]][pos_zero[1] - 1] 
+            self.tabuleiro[pos_zero[0]][pos_zero[1]] = aux
+            self.tabuleiro[pos_zero[0]][pos_zero[1] - 1] = 0
+
 
     def criar_tabuleiro(self, tamanho_matriz: int):    
-        estado_meta = self.criarEstadoMeta(tamanho_matriz)
-
-        self.tabuleiro = tabuleiro[:]
+        self.estado_meta = self.criarEstadoMeta(tamanho_matriz)
+        self.tabuleiro = self.estado_meta
+        for i in range(100):
+            ale = random.randint(0, 4)
+            if ale == 1:
+                self.subir()
+            if ale == 2:
+                self.descer()
+            if ale == 3:
+                self.direitar()
+            if ale == 4:
+                self.esquerdar()
+        self.printarTabuleiro()
     
-    def ehObjetivo(self, tabuleiro:list):
-        tamanho = len(tabuleiro)
-        matriz_meta = []
-        for linha in range(tamanho):
-            linha_meta = []
-            for coluna in range(tamanho):
-                valor = linha * tamanho + coluna + 1
-                if valor == tamanho * tamanho:
-                    valor = 0
-                linha_meta.append(valor)
-            matriz_meta.append(linha_meta)
-
-        return matriz_meta == tabuleiro
+    def ehObjetivo(self, tabuleiro):
+        return self.estado_meta == tabuleiro
     
     def criarEstadoMeta(self, tamanho):
         estado_meta = []
-
         for linha in range(tamanho):
             linha_meta = []
             for coluna in range(tamanho):
@@ -53,20 +94,6 @@ class Tabuleiro:
             estado_meta.append(linha_meta)
 
         return estado_meta
-    
-    def criar_matriz_objetivo(self, tamanho):
-        matriz_objetivo = []
-
-        for linha in range(tamanho):
-            linha_objetivo = []
-            for coluna in range(tamanho):
-                valor = linha * tamanho + coluna + 1
-                if valor == tamanho * tamanho:
-                    valor = 0
-                linha_objetivo.append(valor)
-            matriz_objetivo.append(linha_objetivo)
-
-        return matriz_objetivo
 
 
 class No:
@@ -76,12 +103,11 @@ class No:
 
     def setTabuleiro(self, tabuleiro: Tabuleiro):
         self.tabuleiro = tabuleiro
-
     def getTabuleiro(self):
         return self.tabuleiro
     
-    def clonarTabuleiro(self, tabuleiro):
-        return tabuleiro[:]
+    def clonarTabuleiro(self):
+        return self.tabuleiro[:]
 
     def setPai(self, pai):
         self.pai = pai
@@ -162,7 +188,7 @@ class BuscaEmLargura:
             estado_atual = fila.popleft()
 
             # Verifica se o estado atual é o objetivo
-            if Tabuleiro.ehObjetivo(estado_atual):
+            if ehObjetivo(estado_atual.getTabuleiro()):
                 return estado_atual
 
             # Adiciona o estado atual aos visitados
@@ -178,15 +204,16 @@ class BuscaEmLargura:
 
         return None  # Nenhum estado objetivo encontrado
 
-    # Exemplo de uso
-    # estado_inicial = ...
-    # estado_objetivo = busca_em_largura(estado_inicial)
+# Exemplo de uso
+# estado_inicial = ...
+# estado_objetivo = busca_em_largura(estado_inicial)
 
 tabuleiro = Tabuleiro()
-tabuleiro.criar_tabuleiro(8)
-print(tabuleiro.getTabuleiro())
+tabuleiro.criar_tabuleiro(3)
+# print(tabuleiro.getTabuleiro())
+
 puzzel = No()
 puzzel.setTabuleiro(tabuleiro.getTabuleiro())
 
-print(puzzel.movimentosPossiveis())
 
+print(BuscaEmLargura.busca_em_largura(puzzel))

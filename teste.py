@@ -1,126 +1,86 @@
 import random
-def criar_matriz_objetivo(tamanho):
-    matriz_objetivo = []
+from collections import deque
 
-    for linha in range(tamanho):
-        linha_objetivo = []
-        for coluna in range(tamanho):
-            valor = linha * tamanho + coluna + 1
-            if valor == tamanho * tamanho:
-                valor = 0
-            linha_objetivo.append(valor)
-        matriz_objetivo.append(linha_objetivo)
+# Função para encontrar a posição do espaço vazio no tabuleiro
+def encontrar_vazio(tabuleiro):
+    for i in range(len(tabuleiro)):
+        for j in range(len(tabuleiro[i])):
+            if tabuleiro[i][j] == 0:
+                return i, j
 
-    return matriz_objetivo
+# Função para gerar uma solução válida para o N-puzzle
+def gerar_solucao(n):
+    numeros = list(range(1, n**2))
+    numeros.append(0)
+    solucao = [numeros[i:i+n] for i in range(0, n**2, n)]
+    return solucao
 
-def getPosicaoPecaVazia(tabuleiro):
-    for linha in range(len(tabuleiro)):
-        for coluna in range(3):
-            if tabuleiro[linha][coluna] == 0:
-                return linha, coluna
+# Função para embaralhar o tabuleiro fazendo movimentos aleatórios
+def embaralhar_tabuleiro(tabuleiro, movimentos):
+    for _ in range(movimentos):
+        vazio_i, vazio_j = encontrar_vazio(tabuleiro)
+        direcao = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
+        novo_i, novo_j = vazio_i + direcao[0], vazio_j + direcao[1]
+        if 0 <= novo_i < len(tabuleiro) and 0 <= novo_j < len(tabuleiro[0]):
+            tabuleiro[vazio_i][vazio_j] = tabuleiro[novo_i][novo_j]
+            tabuleiro[novo_i][novo_j] = 0
 
-class Tabuleiro:
-    def __init__(self) -> None:
-        self.tabuleiro = None
+# Algoritmo de busca em largura para resolver o N-puzzle
+def busca_em_largura(tabuleiro):
+    fila = deque([(tabuleiro, [])])
+    visitados = set()
 
-    def setTabuleiro(self, tabuleiro):
-        self.tabuleiro = tabuleiro
-    def getTabuleiro(self):
-        return self.tabuleiro
+    while fila:
+        estado, caminho = fila.popleft()
+        visitados.add(tuple(map(tuple, estado)))  # Convertendo o tabuleiro em tupla para torná-lo imutável
 
-    def printarTabuleiro(self):
-        for i in self.tabuleiro:
-            print(i)
-    
-    def subir(self):
-        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
-        # print(pos_zero)
-        if pos_zero[0] > 0:
-            aux = self.tabuleiro[pos_zero[0] - 1][pos_zero[1]] 
-            self.tabuleiro[pos_zero[0]][pos_zero[1]] = aux
-            self.tabuleiro[pos_zero[0] - 1][pos_zero[1]] = 0
-        
-    def descer(self):
-        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
-        # print(pos_zero)
-        if pos_zero[0] < (len(self.tabuleiro) - 1):
-            aux = self.tabuleiro[pos_zero[0] + 1][pos_zero[1]] 
-            self.tabuleiro[pos_zero[0]][pos_zero[1]] = aux
-            self.tabuleiro[pos_zero[0] + 1][pos_zero[1]] = 0
-            
-    def direitar(self):
-        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
-        # print(pos_zero)
-        if pos_zero[1] < (len(self.tabuleiro) - 1):
-            aux = self.tabuleiro[pos_zero[0]][pos_zero[1] + 1] 
-            self.tabuleiro[pos_zero[0]][pos_zero[1]] = aux
-            self.tabuleiro[pos_zero[0]][pos_zero[1] + 1] = 0
-            # print(getPosicaoPecaVazia(self.tabuleiro))
+        if esta_resolvido(estado):
+            return caminho
 
-    def esquerdar(self):
-        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
-        # print(pos_zero)
-        if pos_zero[1] > 0:
-            aux = self.tabuleiro[pos_zero[0]][pos_zero[1] - 1] 
-            self.tabuleiro[pos_zero[0]][pos_zero[1]] = aux
-            self.tabuleiro[pos_zero[0]][pos_zero[1] - 1] = 0
+        movimentos = gerar_movimentos(estado)
+        for movimento in movimentos:
+            if tuple(map(tuple, movimento)) not in visitados:
+                fila.append((movimento, caminho + [movimento]))
 
+    return None  # Se não encontrou solução
 
-    def criar_tabuleiro(self, tamanho_matriz: int):    
-        estado_meta = self.criarEstadoMeta(tamanho_matriz)
-        self.tabuleiro = estado_meta
-        # self.printarTabuleiro()
-        # print("--------- depois ----------")
-        # self.esquerda()
-        # self.printarTabuleiro()
-        for i in range(100):
-            ale = random.randint(0, 4)
-            if ale == 1:
-                self.subir()
-                # self.printarTabuleiro()
-            if ale == 2:
-                self.descer()
-                # self.printarTabuleiro()
-            if ale == 3:
-                self.direitar()
-                # self.printarTabuleiro()
-            if ale == 4:
-                self.esquerdar()
-                # self.printarTabuleiro()
-            # print('-----------')
-        self.printarTabuleiro()
-        # self.tabuleiro = tabuleiro[:]
-    
-    def ehObjetivo(self, tabuleiro:list): # ajeitar pq tem codigo repetido
-        tamanho = len(tabuleiro)
-        matriz_meta = []
-        for linha in range(tamanho):
-            linha_meta = []
-            for coluna in range(tamanho):
-                valor = linha * tamanho + coluna + 1
-                if ale == valor == tamanho * tamanho:
-                    valor = 0
-                linha_meta.append(valor)
-            matriz_meta.append(linha_meta)
+# Função para verificar se o tabuleiro está resolvido
+def esta_resolvido(tabuleiro):
+    tamanho = len(tabuleiro) * len(tabuleiro[0])
+    return all(tabuleiro[i // len(tabuleiro)][i % len(tabuleiro[0])] == i + 1 for i in range(tamanho - 1)) and tabuleiro[-1][-1] == 0
 
-        return matriz_meta == tabuleiro
-    
-    def criarEstadoMeta(self, tamanho):
-        estado_meta = []
+# Função para gerar os movimentos válidos a partir de um estado do tabuleiro
+def gerar_movimentos(tabuleiro):
+    movimentos = []
+    vazio_i, vazio_j = encontrar_vazio(tabuleiro)
+    direcoes = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Movimentos: direita, esquerda, baixo, cima
 
-        for linha in range(tamanho):
-            linha_meta = []
-            for coluna in range(tamanho):
-                valor = linha * tamanho + coluna + 1
-                if valor == tamanho * tamanho:
-                    valor = 0
-                linha_meta.append(valor)
-            estado_meta.append(linha_meta)
+    for di, dj in direcoes:
+        novo_i, novo_j = vazio_i + di, vazio_j + dj
+        if 0 <= novo_i < len(tabuleiro) and 0 <= novo_j < len(tabuleiro[0]):
+            novo_tabuleiro = [linha[:] for linha in tabuleiro]  # Copia o tabuleiro
+            novo_tabuleiro[vazio_i][vazio_j] = novo_tabuleiro[novo_i][novo_j]
+            novo_tabuleiro[novo_i][novo_j] = 0
+            movimentos.append(novo_tabuleiro)
 
-        return estado_meta
+    return movimentos
 
+# Teste do algoritmo
+n = 4
+solucao = gerar_solucao(n)
+tabuleiro = [linha[:] for linha in solucao]
+embaralhar_tabuleiro(tabuleiro, n**3 * 2)  # Embaralha o tabuleiro fazendo 2*N^3 movimentos aleatórios
+print("Tabuleiro inicial:")
+for linha in tabuleiro:
+    print(linha)
 
-# Exemplo de uso
-tabuleiro = Tabuleiro()
-matriz_objetivo = tabuleiro.criar_tabuleiro(3)
-
+passos = busca_em_largura(tabuleiro)
+if passos:
+    print("\nPassos para a solução:")
+    for i, estado in enumerate(passos):
+        print(f"Passo {i + 1}:")
+        for linha in estado:
+            print(linha)
+        print()
+else:
+    print("\nNão foi possível encontrar uma solução.")
