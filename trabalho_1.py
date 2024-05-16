@@ -69,13 +69,14 @@ class Tabuleiro:
         self.tabuleiro = self.estado_meta
         for i in range(100):
             ale = random.randint(0, 4)
-            if ale == 1:
+            pos_zero = getPosicaoPecaVazia()
+            if ale == 1 and pos_zero[0] > 0:
                 self.subir()
-            if ale == 2:
+            if ale == 2 and (pos_zero[0] < (tamanho_matriz - 1)):
                 self.descer()
-            if ale == 3:
+            if ale == 3 and (pos_zero[1] < (tamanho_matriz - 1)):
                 self.direitar()
-            if ale == 4:
+            if ale == 4 and pos_zero[1] > 0:
                 self.esquerdar()
         self.printarTabuleiro()
     
