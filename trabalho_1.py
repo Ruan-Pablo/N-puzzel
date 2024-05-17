@@ -114,10 +114,17 @@ class Tabuleiro:
     def criar_tabuleiro(self, tamanho_matriz: int):
         self.estado_meta = self.criarEstadoMeta(tamanho_matriz)
         self.tabuleiro = self.estado_meta
-
-        for _ in range(1000):
-            self.tabuleiro = random.choice(self.movimentoAleatorio())
-
+        for i in range(100):
+            ale = random.randint(1, 4)
+            pos_zero = getPosicaoPecaVazia(self.tabuleiro)
+            if ale == 1 and pos_zero[0] > 0:
+                self.subir()
+            if ale == 2 and (pos_zero[0] < (tamanho_matriz - 1)):
+                self.descer()
+            if ale == 3 and (pos_zero[1] < (tamanho_matriz - 1)):
+                self.direitar()
+            if ale == 4 and pos_zero[1] > 0:
+                self.esquerdar()
         self.printarTabuleiro()
     
     def ehObjetivo(self, tabuleiro):
