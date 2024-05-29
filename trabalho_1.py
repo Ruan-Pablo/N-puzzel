@@ -26,15 +26,26 @@ def printarTabuleiro(tabuleiro):
     for i in tabuleiro:
         print(i)
 
+def solucionavel(lista):
+    inversoes = 0
+    for i,e in enumerate(lista):
+        if e == 0:
+            continue
+        for j in range(i+1,len(lista)):
+            if lista[j]==0:
+                continue
+            if e > lista[j]:
+                inversoes+=1
+        if inversoes%2 == 1:
+            return False
+        else:
+            return True
+
+
 class Tabuleiro:
     def __init__(self) -> None:
         self.tabuleiro = None
         self.estado_meta = None
-
-    def setTabuleiro(self, tabuleiro):
-        self.tabuleiro = tabuleiro
-    def getTabuleiro(self):
-        return self.tabuleiro
 
     def printarTabuleiro(self):
         for i in self.tabuleiro:
@@ -125,6 +136,7 @@ class Tabuleiro:
                 self.direitar()
             if ale == 4 and pos_zero[1] > 0:
                 self.esquerdar()
+        print(solucionavel(self.tabuleiro))
         self.printarTabuleiro()
     
     def ehObjetivo(self, tabuleiro):
@@ -140,31 +152,23 @@ class Tabuleiro:
                     valor = 0
                 linha_meta.append(valor)
             estado_meta.append(linha_meta)
-
+        
         return estado_meta
 
 
 class No:
     def __init__(self):
         self.tabuleiro = None
+        self.estado_meta = None
         self.pai = None
-
-    def setTabuleiro(self, tabuleiro: Tabuleiro):
-        self.tabuleiro = tabuleiro
-    def getTabuleiro(self):
-        return self.tabuleiro
-    
+        self.pontos = 0
+ 
     def clonarTabuleiro(self):
         nova_matriz = []
         for row in self.tabuleiro:
             nova_matriz.append(row[:])
         return nova_matriz
 
-    def setPai(self, pai):
-        self.pai = pai
-
-    def getPai(self):
-        return self.pai
 
     def movimentosPossiveis(self):
         movimentos = []
@@ -173,41 +177,45 @@ class No:
         # Movimento para cima
         if linha > 0:
             vNo = No()
-            vNo.setPai(self)
-            vNo.setTabuleiro(self.clonarTabuleiro())
-            aux = vNo.getTabuleiro()[linha - 1][coluna]
-            vNo.getTabuleiro()[linha - 1][coluna] = 0
-            vNo.getTabuleiro()[linha][coluna] = aux
+            vNo.pai = self
+            vNo.estado_meta = self.estado_meta
+            vNo.tabuleiro = self.clonarTabuleiro()
+            aux = vNo.tabuleiro[linha - 1][coluna]
+            vNo.tabuleiro[linha - 1][coluna] = 0
+            vNo.tabuleiro[linha][coluna] = aux
             movimentos.append(vNo)
 
         # Movimento para baixo
         if linha < (tamanho_tabuleiro - 1):
             vNo = No()
-            vNo.setPai(self)
-            vNo.setTabuleiro(self.clonarTabuleiro())
-            aux = vNo.getTabuleiro()[linha + 1][coluna]
-            vNo.getTabuleiro()[linha + 1][coluna] = 0
-            vNo.getTabuleiro()[linha][coluna] = aux
+            vNo.estado_meta = self.estado_meta
+            vNo.pai = self
+            vNo.tabuleiro = self.clonarTabuleiro()
+            aux = vNo.tabuleiro[linha + 1][coluna]
+            vNo.tabuleiro[linha + 1][coluna] = 0
+            vNo.tabuleiro[linha][coluna] = aux
             movimentos.append(vNo)
 
         # Movimento para esquerda
         if coluna > 0:
             vNo = No()
-            vNo.setPai(self)
-            vNo.setTabuleiro(self.clonarTabuleiro())
-            aux = vNo.getTabuleiro()[linha][coluna - 1]
-            vNo.getTabuleiro()[linha][coluna - 1] = 0
-            vNo.getTabuleiro()[linha][coluna] = aux
+            vNo.pai = self
+            vNo.estado_meta = self.estado_meta
+            vNo.tabuleiro = self.clonarTabuleiro()
+            aux = vNo.tabuleiro[linha][coluna - 1]
+            vNo.tabuleiro[linha][coluna - 1] = 0
+            vNo.tabuleiro[linha][coluna] = aux
             movimentos.append(vNo)
 
         # Movimento para direita
         if coluna < (tamanho_tabuleiro - 1):
             vNo = No()
-            vNo.setPai(self)
-            vNo.setTabuleiro(self.clonarTabuleiro())
-            aux = vNo.getTabuleiro()[linha][coluna + 1]
-            vNo.getTabuleiro()[linha][coluna + 1] = 0
-            vNo.getTabuleiro()[linha][coluna] = aux
+            vNo.pai = self
+            vNo.estado_meta = self.estado_meta
+            vNo.tabuleiro = self.clonarTabuleiro()
+            aux = vNo.tabuleiro[linha][coluna + 1]
+            vNo.tabuleiro[linha][coluna + 1] = 0
+            vNo.tabuleiro[linha][coluna] = aux
             movimentos.append(vNo)
         # print(movimentos)
         return movimentos
@@ -240,13 +248,13 @@ class No:
 
 class BuscaEmLargura:
     def busca_em_largura(estado_inicial):
-        fila: Queue[No] = deque()
+        fila = deque() 
         visitados = set()
 
         # Adiciona o estado inicial à fila
         fila.append(estado_inicial)
-        while fila:
-            estado_atual = fila.popleft()
+        while len(fila) > 0:
+            estado_atual:No = fila.popleft()
 
             if ehObjetivo(estado_atual.getTabuleiro()):
                 print('fim da busca')
@@ -265,6 +273,39 @@ class BuscaEmLargura:
         
         return None  # Nenhum estado objetivo encontrado
 
+class AEstrela_h1:
+    
+    def busca(estado_inicial: No):
+        def pecas_fora_do_lugar(no: No, estado_meta: list):
+            counter = 0
+            for i in range(len(no.tabuleiro)):
+                for j in range(len(no.tabuleiro)):
+                    if no.tabuleiro[i][j] != estado_meta[i][j]:
+                        counter += 1
+
+            return counter
+        fila_prioridade = deque()
+        fila_prioridade.append((0, estado_inicial))
+
+        pontos_g = { estado_inicial: 0 }
+
+        while fila_prioridade:
+            estado_atual:No = fila_prioridade.popleft()[1]
+            
+            if ehObjetivo(estado_atual.tabuleiro):
+                print('Fim A*')
+            # print(pontos_g[estado_atual])
+            tentiva_ponto_g = pontos_g[estado_atual] + 1
+            # print('tetatiav ', tentiva_ponto_g)
+
+            movimentos = estado_atual.movimentosPossiveis()
+
+            for movimento in movimentos:
+                if movimento not in pontos_g or tentiva_ponto_g < pontos_g[movimento]:
+                    fila_prioridade.appendleft((tentiva_ponto_g + pecas_fora_do_lugar(movimento, movimento.estado_meta), movimento))
+                    pontos_g[movimento] = tentiva_ponto_g
+        return None
+
 # Exemplo de uso
 # estado_inicial = ...
 # estado_objetivo = busca_em_largura(estado_inicial)
@@ -273,9 +314,14 @@ tabuleiro = Tabuleiro()
 tabuleiro.criar_tabuleiro(3)
 
 puzzel = No()
-puzzel.setTabuleiro(tabuleiro.getTabuleiro())
+puzzel.tabuleiro = tabuleiro.tabuleiro
+puzzel.estado_meta = tabuleiro.estado_meta
 
-final = BuscaEmLargura.busca_em_largura(puzzel)
-for i, state in enumerate(final):
+# final = BuscaEmLargura.busca_em_largura(puzzel)
+
+a_estrela = AEstrela_h1.busca(puzzel)
+print(a_estrela)
+
+for i, state in enumerate(a_estrela):
         print('-' * 10 + f' Passo {i} ' + '-' * 10)
         printarTabuleiro(state.tabuleiro)
