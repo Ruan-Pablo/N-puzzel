@@ -20,6 +20,7 @@ def ehObjetivo(tabuleiro):
                 valor = 0
             linha_meta.append(valor)
         estado_meta.append(linha_meta)
+    estado_meta = tuple(map(tuple, estado_meta))
     return estado_meta == tabuleiro
 
 def printarTabuleiro(tabuleiro):
@@ -125,7 +126,7 @@ class Tabuleiro:
     def criar_tabuleiro(self, tamanho_matriz: int):
         self.estado_meta = self.criarEstadoMeta(tamanho_matriz)
         self.tabuleiro = self.estado_meta
-        for i in range(100):
+        for i in range(1000):
             ale = random.randint(1, 4)
             pos_zero = getPosicaoPecaVazia(self.tabuleiro)
             if ale == 1 and pos_zero[0] > 0:
@@ -136,7 +137,6 @@ class Tabuleiro:
                 self.direitar()
             if ale == 4 and pos_zero[1] > 0:
                 self.esquerdar()
-        print(solucionavel(self.tabuleiro))
         self.printarTabuleiro()
     
     def ehObjetivo(self, tabuleiro):
@@ -152,7 +152,7 @@ class Tabuleiro:
                     valor = 0
                 linha_meta.append(valor)
             estado_meta.append(linha_meta)
-        
+        self.estado_meta = estado_meta
         return estado_meta
 
 
@@ -195,6 +195,7 @@ class No:
             vNo.tabuleiro[linha + 1][coluna] = 0
             vNo.tabuleiro[linha][coluna] = aux
             movimentos.append(vNo)
+            if vNo.tabuleiro == vNo.estado_meta: print(" -------------- ACHOU --------------")
 
         # Movimento para esquerda
         if coluna > 0:
@@ -250,28 +251,76 @@ class BuscaEmLargura:
     def busca_em_largura(estado_inicial):
         fila = deque() 
         visitados = set()
-
-        # Adiciona o estado inicial à fila
         fila.append(estado_inicial)
-        while len(fila) > 0:
-            estado_atual:No = fila.popleft()
 
-            if ehObjetivo(estado_atual.getTabuleiro()):
+        while fila:
+            estado_atual = fila.popleft()
+            
+            # Supondo que `estado_atual.tabuleiro` seja uma lista, vamos convertê-lo para uma tupla
+            tabu_atual = tuple(map(tuple, estado_atual.tabuleiro))
+
+            if ehObjetivo(tabu_atual):
                 print('fim da busca')
-                
                 return estado_atual.passos()
-
-            visitados.add(estado_atual)
+            
+            # print("estado atual:", tabu_atual)
+            
+            visitados.add(tabu_atual)
             movimentos = estado_atual.movimentosPossiveis()
-
-            # Para cada movimento possível, verifica se já foi visitado e, caso contrário, adiciona à fila
+            
+            # Adiciona os tabuleiros de possíveis movimentos para verificação e debug
+            # for movimento in movimentos:
+            #     mov_tabu = tuple(map(tuple, movimento.tabuleiro))
+                # print(mov_tabu)
+            
+            # print(visitados)
+            
             for movimento in movimentos:
-                if movimento not in visitados:
-                    # print(movimento.pai.tabuleiro)
+                mov_tabu = tuple(map(tuple, movimento.tabuleiro))
+                if mov_tabu not in visitados:
                     fila.append(movimento)
+
+# Exemplo de uso:
+# Define a função `ehObjetivo` que verifica se um tabuleiro é o estado objetivo
+# Define a classe `No` com atributos `tabuleiro`, método `passos()` e `movimentosPossiveis()`
+
 
         
         return None  # Nenhum estado objetivo encontrado
+
+class BuscaEmProfundidade:
+    def buscar(self, inicio, objetivo):
+        obj = objetivo
+        profundidade = 0
+        
+        while True:
+            resultado = self.busca_limitada_por_profundidade(BuscaEmProfundidade, inicio, obj, profundidade)
+            if resultado:
+                return resultado
+
+            profundidade += 1
+    
+    def busca_em_profundidade(self, inicio, objetivo, limite):
+        pilha = [(inicio, limite)]
+        
+        while len(pilha) > 0:
+            atual, profundidade_restante = pilha.pop()
+            
+            if atual == objetivo:
+                return atual.passos()
+            
+            if profundidade_restante > 0:
+                print(atual.passos())
+                caminho_atual = atual.passos()
+                
+                if atual in caminho_atual[:-1]:
+                    continue
+                
+                for vizinho in atual.movimentosPossiveis():
+                    pilha.append((vizinho, profundidade_restante - 1))
+        
+        return False
+
 
 class AEstrela_h1:
     
@@ -280,6 +329,7 @@ class AEstrela_h1:
             counter = 0
             for i in range(len(no.tabuleiro)):
                 for j in range(len(no.tabuleiro)):
+                    if no.tabuleiro[i][j] == 0: continue
                     if no.tabuleiro[i][j] != estado_meta[i][j]:
                         counter += 1
 
@@ -313,15 +363,21 @@ class AEstrela_h1:
 tabuleiro = Tabuleiro()
 tabuleiro.criar_tabuleiro(3)
 
+print(tabuleiro.tabuleiro)
+print(tabuleiro.estado_meta)
+
 puzzel = No()
 puzzel.tabuleiro = tabuleiro.tabuleiro
-puzzel.estado_meta = tabuleiro.estado_meta
+puzzel.estado_meta = [[1,2,3],[4,5,6],[7,8,0]]
 
-# final = BuscaEmLargura.busca_em_largura(puzzel)
+# if ehObjetivo(((1,2,3),(4,5,6),(7,8,0))):
+#     print('fim da busca')
 
-a_estrela = AEstrela_h1.busca(puzzel)
-print(a_estrela)
-
-for i, state in enumerate(a_estrela):
+final = BuscaEmLargura.busca_em_largura(puzzel)
+# final = BuscaEmProfundidade.buscar(BuscaEmProfundidade, puzzel, puzzel.estado_meta)
+# a_estrela = AEstrela_h1.busca(puzzel)
+# print(a_estrela)
+# print(final)
+for i, state in enumerate(final):
         print('-' * 10 + f' Passo {i} ' + '-' * 10)
         printarTabuleiro(state.tabuleiro)
