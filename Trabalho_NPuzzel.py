@@ -23,6 +23,7 @@ class Metricas:
 
     def comecarCronometro(self):
         self.inicio_tempo = time.time()
+
     def finalizarCronometro(self):
         self.tempo_execucao = time.time() - self.inicio_tempo
     
@@ -52,8 +53,8 @@ class Tabuleiro:
                 
     def subir(self):
         pos_zero = self.getPosicaoPecaVazia()
-        tabuleiro = self.clonarTabuleiro()
         if pos_zero[0] > 0:
+            tabuleiro = self.clonarTabuleiro()
             aux = tabuleiro[pos_zero[0] - 1][pos_zero[1]] 
             tabuleiro[pos_zero[0]][pos_zero[1]] = aux
             tabuleiro[pos_zero[0] - 1][pos_zero[1]] = 0
@@ -62,8 +63,8 @@ class Tabuleiro:
         
     def descer(self):
         pos_zero = self.getPosicaoPecaVazia()
-        tabuleiro = self.clonarTabuleiro()
         if pos_zero[0] < (len(self.tabuleiro) - 1):
+            tabuleiro = self.clonarTabuleiro()
             aux = tabuleiro[pos_zero[0] + 1][pos_zero[1]] 
             tabuleiro[pos_zero[0]][pos_zero[1]] = aux
             tabuleiro[pos_zero[0] + 1][pos_zero[1]] = 0
@@ -72,8 +73,8 @@ class Tabuleiro:
             
     def direitar(self):
         pos_zero = self.getPosicaoPecaVazia()
-        tabuleiro = self.clonarTabuleiro()
         if pos_zero[1] < (len(self.tabuleiro) - 1):
+            tabuleiro = self.clonarTabuleiro()
             aux = tabuleiro[pos_zero[0]][pos_zero[1] + 1] 
             tabuleiro[pos_zero[0]][pos_zero[1]] = aux
             tabuleiro[pos_zero[0]][pos_zero[1] + 1] = 0
@@ -83,8 +84,8 @@ class Tabuleiro:
 
     def esquerdar(self):
         pos_zero = self.getPosicaoPecaVazia()
-        tabuleiro = self.clonarTabuleiro()
         if pos_zero[1] > 0:
+            tabuleiro = self.clonarTabuleiro()
             aux = tabuleiro[pos_zero[0]][pos_zero[1] - 1] 
             tabuleiro[pos_zero[0]][pos_zero[1]] = aux
             tabuleiro[pos_zero[0]][pos_zero[1] - 1] = 0
@@ -162,12 +163,12 @@ class No(Tabuleiro):
         return movimentos
     
     def passos(self):
-        current = self
-        passos = [current]
+        atual = self
+        passos = [atual]
         
-        while current.pai is not None:
-            current = current.pai
-            passos.append(current)
+        while atual.pai is not None:
+            atual = atual.pai
+            passos.append(atual)
         
         passos.reverse()
         return passos
@@ -194,12 +195,12 @@ class BuscaEmLargura:
             tabu_atual = tuple(map(tuple, estado_atual.tabuleiro))
             visitados.add(tabu_atual)
             movimentos = estado_atual.movimentosPossiveis()
-            metricas_BFS.ciclos += 1
+            metricas_BFS.ciclos += 1 #metrica
 
             for movimento in movimentos:
                 mov_tabu = tuple(map(tuple, movimento.tabuleiro))
                 if mov_tabu not in visitados:
-                    metricas_BFS.nos_expandidos += 1
+                    metricas_BFS.nos_expandidos += 1 #metrica
                     fila.append(movimento)   
         return None
 
