@@ -1,3 +1,10 @@
+'''
+1° Atividade de IA
+Equipe: 
+    Ruan Pablo de Sousa Estácio
+    Adriano Kennedy Balbino do Nascimento Filho
+'''
+
 import random
 from collections import deque
 import time
