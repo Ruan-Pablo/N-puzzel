@@ -1,78 +1,49 @@
+'''
+1° Atividade de IA
+Equipe: 
+    Ruan Pablo de Sousa Estácio
+    Adriano Kennedy Balbino do Nascimento Filho
+'''
+
 import random
 from collections import deque
 import time
+import sys
 
-
-def getPosicaoPecaVazia(tabuleiro):
-    for linha in range(len(tabuleiro)):
-        for coluna in range(len(tabuleiro)):
-            if tabuleiro[linha][coluna] == 0:
-                return linha, coluna
-
-def ehObjetivo(tabuleiro):
-    tamanho = len(tabuleiro)
-    estado_meta = []
-    for linha in range(tamanho):
-        linha_meta = []
-        for coluna in range(tamanho):
-            valor = linha * tamanho + coluna + 1
-            if valor == tamanho * tamanho:
-                valor = 0
-            linha_meta.append(valor)
-        estado_meta.append(linha_meta)
-    estado_meta = tuple(map(tuple, estado_meta))
-    return estado_meta == tabuleiro
-
-def printarTabuleiro(tabuleiro):
-    for i in tabuleiro:
-        print(i)
-
-def solucionavel(lista):
-    inversoes = 0
-    for i,e in enumerate(lista):
-        if e == 0:
-            continue
-        for j in range(i+1,len(lista)):
-            if lista[j]==0:
-                continue
-            if e > lista[j]:
-                inversoes+=1
-        if inversoes%2 == 1:
-            return False
-        else:
-            return True
 
 class Metricas:
     def __init__(self) -> None:
         self.passos = 0
-        self.inicio_tempo = None
-        self.fim_tempo = None
-        self.max_mem = 0
+        self.inicio_tempo = 0
+        self.tempo_execucao = None
+        self.memoria = 0
         self.nos_expandidos = 0
-        
-        self.fator_ramificacao = 0
+        self.ciclos = 0
     
     def zerar_metricas(self):
         self.passos = 0
-        self.inicio_tempo = None
-        self.fim_tempo = None
-        self.max_mem = 0
-        self.qtd_no = 0
-        
-        self.fator_ramificacao = 0
+        self.inicio_tempo = 0
+        self.tempo_execucao = None
+        self.memoria = 0
+        self.nos_expandidos = 0
+        self.ciclos = 0
 
-    def comecar_cronometro(self):
+    def comecarCronometro(self):
         self.inicio_tempo = time.time()
-    def finalizar_cronometro(self):
-        self.fim_tempo = time.time()
+
+    def finalizarCronometro(self):
+        self.tempo_execucao = time.time() - self.inicio_tempo
+    
+    def atualizaMemoria(self, fila=0):
+        self.memoria = max(self.memoria, sys.getsizeof(fila))
 
 class Tabuleiro:
     def __init__(self) -> None:
         self.tabuleiro = None
         self.estado_meta = None
 
-    def printarTabuleiro(self):
-        for i in self.tabuleiro:
+    def printarTabuleiro(self, tabuleiro):
+        for i in tabuleiro:
             print(i)
     
     def clonarTabuleiro(self):
@@ -80,90 +51,68 @@ class Tabuleiro:
         for row in self.tabuleiro:
             nova_matriz.append(row[:])
         return nova_matriz
-
+        
+    def getPosicaoPecaVazia(self):
+        for linha in range(len(self.tabuleiro)):
+            for coluna in range(len(self.tabuleiro)):
+                if self.tabuleiro[linha][coluna] == 0:
+                    return linha, coluna
+                
     def subir(self):
-        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
-        tabuleiro = self.clonarTabuleiro()
+        pos_zero = self.getPosicaoPecaVazia()
         if pos_zero[0] > 0:
+            tabuleiro = self.clonarTabuleiro()
             aux = tabuleiro[pos_zero[0] - 1][pos_zero[1]] 
             tabuleiro[pos_zero[0]][pos_zero[1]] = aux
             tabuleiro[pos_zero[0] - 1][pos_zero[1]] = 0
-            self.tabuleiro = tabuleiro
 
             return tabuleiro
         
     def descer(self):
-        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
-        tabuleiro = self.clonarTabuleiro()
+        pos_zero = self.getPosicaoPecaVazia()
         if pos_zero[0] < (len(self.tabuleiro) - 1):
+            tabuleiro = self.clonarTabuleiro()
             aux = tabuleiro[pos_zero[0] + 1][pos_zero[1]] 
             tabuleiro[pos_zero[0]][pos_zero[1]] = aux
             tabuleiro[pos_zero[0] + 1][pos_zero[1]] = 0
-            self.tabuleiro = tabuleiro
 
             return tabuleiro
             
     def direitar(self):
-        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
-        tabuleiro = self.clonarTabuleiro()
+        pos_zero = self.getPosicaoPecaVazia()
         if pos_zero[1] < (len(self.tabuleiro) - 1):
+            tabuleiro = self.clonarTabuleiro()
             aux = tabuleiro[pos_zero[0]][pos_zero[1] + 1] 
             tabuleiro[pos_zero[0]][pos_zero[1]] = aux
             tabuleiro[pos_zero[0]][pos_zero[1] + 1] = 0
-            self.tabuleiro = tabuleiro
 
             return tabuleiro
-            # print(getPosicaoPecaVazia(self.tabuleiro))
+
 
     def esquerdar(self):
-        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
-        tabuleiro = self.clonarTabuleiro()
+        pos_zero = self.getPosicaoPecaVazia()
         if pos_zero[1] > 0:
+            tabuleiro = self.clonarTabuleiro()
             aux = tabuleiro[pos_zero[0]][pos_zero[1] - 1] 
             tabuleiro[pos_zero[0]][pos_zero[1]] = aux
             tabuleiro[pos_zero[0]][pos_zero[1] - 1] = 0
-            self.tabuleiro = tabuleiro
 
             return tabuleiro
 
-    def movimentoAleatorio(self):
-        tabuleiro = []
-        pos_zero = getPosicaoPecaVazia(self.tabuleiro)
-        if pos_zero[0] > 0:
-            tabuleiro.append(self.subir())
-            # print('subi')
-        if pos_zero[0] < (len(self.tabuleiro) - 1):
-            tabuleiro.append(self.descer())
-            # print('desci')
-
-        if pos_zero[1] > 0:
-            tabuleiro.append(self.esquerdar())
-            # print('esq')
-
-        if pos_zero[1] < (len(self.tabuleiro) - 1):
-            tabuleiro.append(self.direitar())
-            # print('dir')
-
-        return tabuleiro
-
-    def criar_tabuleiro(self, tamanho_matriz: int):
-        self.estado_meta = self.criarEstadoMeta(tamanho_matriz)
+    def criarTabuleiro(self, tamanho_matriz: int):
+        self.criarEstadoMeta(tamanho_matriz)
         self.tabuleiro = self.estado_meta
-        for i in range(1000):
+        for i in range(10000):
             ale = random.randint(1, 4)
-            pos_zero = getPosicaoPecaVazia(self.tabuleiro)
+            pos_zero = self.getPosicaoPecaVazia()
             if ale == 1 and pos_zero[0] > 0:
-                self.subir()
+                self.tabuleiro = self.subir()
             if ale == 2 and (pos_zero[0] < (tamanho_matriz - 1)):
-                self.descer()
+                self.tabuleiro = self.descer()
             if ale == 3 and (pos_zero[1] < (tamanho_matriz - 1)):
-                self.direitar()
+                self.tabuleiro = self.direitar()
             if ale == 4 and pos_zero[1] > 0:
-                self.esquerdar()
-        self.printarTabuleiro()
-    
-    def ehObjetivo(self, tabuleiro):
-        return self.estado_meta == tabuleiro
+                self.tabuleiro = self.esquerdar()
     
     def criarEstadoMeta(self, tamanho):
         estado_meta = []
@@ -176,36 +125,22 @@ class Tabuleiro:
                 linha_meta.append(valor)
             estado_meta.append(linha_meta)
         self.estado_meta = estado_meta
-        return estado_meta
 
 
-class No:
+class No(Tabuleiro):
     def __init__(self):
-        self.tabuleiro = None
-        self.estado_meta = None
         self.pai = None
-        self.pontos = 0
- 
-    def clonarTabuleiro(self):
-        nova_matriz = []
-        for row in self.tabuleiro:
-            nova_matriz.append(row[:])
-        return nova_matriz
-
 
     def movimentosPossiveis(self):
         movimentos = []
-        linha, coluna = getPosicaoPecaVazia(self.tabuleiro)
+        linha, coluna = self.getPosicaoPecaVazia()
         tamanho_tabuleiro = len(self.tabuleiro)
         # Movimento para cima
         if linha > 0:
             nNo = No()
             nNo.pai = self
             nNo.estado_meta = self.estado_meta
-            nNo.tabuleiro = self.clonarTabuleiro()
-            aux = nNo.tabuleiro[linha - 1][coluna]
-            nNo.tabuleiro[linha - 1][coluna] = 0
-            nNo.tabuleiro[linha][coluna] = aux
+            nNo.tabuleiro = self.subir()
             movimentos.append(nNo)
 
         # Movimento para baixo
@@ -213,10 +148,7 @@ class No:
             nNo = No()
             nNo.estado_meta = self.estado_meta
             nNo.pai = self
-            nNo.tabuleiro = self.clonarTabuleiro()
-            aux = nNo.tabuleiro[linha + 1][coluna]
-            nNo.tabuleiro[linha + 1][coluna] = 0
-            nNo.tabuleiro[linha][coluna] = aux
+            nNo.tabuleiro = self.descer()
             movimentos.append(nNo)
 
         # Movimento para esquerda
@@ -224,10 +156,7 @@ class No:
             nNo = No()
             nNo.pai = self
             nNo.estado_meta = self.estado_meta
-            nNo.tabuleiro = self.clonarTabuleiro()
-            aux = nNo.tabuleiro[linha][coluna - 1]
-            nNo.tabuleiro[linha][coluna - 1] = 0
-            nNo.tabuleiro[linha][coluna] = aux
+            nNo.tabuleiro = self.esquerdar()
             movimentos.append(nNo)
 
         # Movimento para direita
@@ -235,158 +164,135 @@ class No:
             nNo = No()
             nNo.pai = self
             nNo.estado_meta = self.estado_meta
-            nNo.tabuleiro = self.clonarTabuleiro()
-            aux = nNo.tabuleiro[linha][coluna + 1]
-            nNo.tabuleiro[linha][coluna + 1] = 0
-            nNo.tabuleiro[linha][coluna] = aux
+            nNo.tabuleiro = self.direitar()
             movimentos.append(nNo)
         return movimentos
-
-    def getPosicaoPecaVazia(self):
-        for linha in range(len(self.tabuleiro)):
-            for coluna in range(len(self.tabuleiro)):
-                if self.tabuleiro[linha][coluna] == 0:
-                    return linha, coluna
-
-    def exibirMovimentos(self, movimentos:list):
-        for obj in movimentos:
-            print(obj.tabuleiro)
     
     def passos(self):
-        current = self
-        passos = [current]
+        atual = self
+        passos = [atual]
         
-        while current.pai is not None:
-            # print(current.pai.tabuleiro)
-            current = current.pai
-            passos.append(current)
+        while atual.pai is not None:
+            atual = atual.pai
+            passos.append(atual)
         
         passos.reverse()
         return passos
 
 
-    # def caminhoDasPecas(self, no):
-    #     pass  # Implemente conforme necessário
-
 class BuscaEmLargura:
-    def busca_em_largura(estado_inicial):
+    def buscaEmLargura(estado_inicial: No):
         metricas_BFS = Metricas()
+        metricas_BFS.comecarCronometro() # metrica
         fila = deque() 
         visitados = set()
         fila.append(estado_inicial)
 
-        while fila:
+        while len(fila) > 0:
+            metricas_BFS.atualizaMemoria(fila) # metrica
             estado_atual = fila.popleft()
-            tabu_atual = tuple(map(tuple, estado_atual.tabuleiro))
 
-            if ehObjetivo(tabu_atual):
-                print('fim da busca')
+            if estado_atual.tabuleiro == estado_atual.estado_meta:
                 passos = estado_atual.passos()
                 metricas_BFS.passos = len(passos)
-                return passos
+                metricas_BFS.finalizarCronometro() # metrica
+                return (metricas_BFS, passos)
             
+            tabu_atual = tuple(map(tuple, estado_atual.tabuleiro))
             visitados.add(tabu_atual)
             movimentos = estado_atual.movimentosPossiveis()
-            
+            metricas_BFS.ciclos += 1 #metrica
+
             for movimento in movimentos:
                 mov_tabu = tuple(map(tuple, movimento.tabuleiro))
                 if mov_tabu not in visitados:
-                    fila.append(movimento)        
-
+                    metricas_BFS.nos_expandidos += 1 #metrica
+                    fila.append(movimento)   
         return None
+    
 
-class BuscaEmProfundidade:
-    def buscar(self, inicio, objetivo):
-        obj = objetivo
+class BuscaAprofundamentoIterativo:
+    def buscar(inicio: No):
+        metricas_IDS = Metricas()
+        metricas_IDS.zerar_metricas() #limpar as métricas
+        metricas_IDS.comecarCronometro()
+        
         profundidade = 0
         
-        while True:
-            resultado = self.busca_limitada_por_profundidade(BuscaEmProfundidade, inicio, obj, profundidade)
-            if resultado:
-                return resultado
-
-            profundidade += 1
-    
-    def busca_em_profundidade(self, inicio, objetivo, limite):
-        pilha = [(inicio, limite)]
-        
-        while len(pilha) > 0:
-            atual, profundidade_restante = pilha.pop()
+        while True:            
+            pilha = deque()
+            pilha.append((profundidade, inicio))
             
-            if atual == objetivo:
-                return atual.passos()
+            interromper = False
             
-            if profundidade_restante > 0:
-                print(atual.passos())
-                caminho_atual = atual.passos()
+            while len(pilha)>0:
+                metricas_IDS.atualizaMemoria(pilha)
                 
-                if atual in caminho_atual[:-1]:
+                d_pontuacao, estado_atual = pilha.pop()  # desempilha (pega o último)
+                
+                if estado_atual.tabuleiro == estado_atual.estado_meta:
+                    interromper = True
+                    metricas_IDS.finalizarCronometro() # metrica
+
+                    break
+                
+                if d_pontuacao <= 0:
+                    continue
+                # pobrema
+                caminho_atual = estado_atual.passos() #
+
+                if estado_atual in caminho_atual[:-1]: #
                     continue
                 
-                for vizinho in atual.movimentosPossiveis():
-                    pilha.append((vizinho, profundidade_restante - 1))
+                metricas_IDS.ciclos += 1
+                
+                for vizinho in estado_atual.movimentosPossiveis():
+                    metricas_IDS.nos_expandidos += 1
+                    
+                    pilha.append((d_pontuacao - 1, vizinho))
+                    
+            if interromper:
+                break
+                    
+            profundidade += 1
+
+        # metricas_IDS.atualizar_caminho(estado_atual.())
         
-        return False
+        # metricas_IDS.atualizar_temporizador()
 
 
-class AEstrela_h1:
-    
-    def busca(estado_inicial: No):
-        def pecas_fora_do_lugar(no: No, estado_meta: list):
-            counter = 0
-            for i in range(len(no.tabuleiro)):
-                for j in range(len(no.tabuleiro)):
-                    if no.tabuleiro[i][j] == 0: continue
-                    if no.tabuleiro[i][j] != estado_meta[i][j]:
-                        counter += 1
+def mostrarResultado(tupla_busca):
+    metricas, passos = tupla_busca
+    for i, estado in enumerate(passos):
+        print(f"""
+           {estado.tabuleiro[0]}
+Passo {i:02d}:  {estado.tabuleiro[1]}
+           {estado.tabuleiro[2]}""")
+        
+    print(f"""
+--------- Metricas calculadas ---------
+Quantidade de passos:  {metricas.passos - 1}
+Tempo:                 {metricas.tempo_execucao:.3f} segundos
+Maximo de memoria:     {metricas.memoria} bytes
+Nos expandidos:        {metricas.nos_expandidos}
+Fator de ramificacao:  {metricas.nos_expandidos / metricas.ciclos if metricas.ciclos > 0 else 0:.2f}
+""")
 
-            return counter
-        fila_prioridade = deque()
-        fila_prioridade.append((0, estado_inicial))
+def mostrarPrevia(puzzel):
+    print("Estado Atual | Estado Meta")
+    for index, valor in enumerate(puzzel.tabuleiro):
+        print(' ', valor, ' | ', puzzel.estado_meta[index])
 
-        pontos_g = { estado_inicial: 0 }
-
-        while fila_prioridade:
-            estado_atual:No = fila_prioridade.popleft()[1]
-            
-            if ehObjetivo(estado_atual.tabuleiro):
-                print('Fim A*')
-            # print(pontos_g[estado_atual])
-            tentiva_ponto_g = pontos_g[estado_atual] + 1
-            # print('tetatiav ', tentiva_ponto_g)
-
-            movimentos = estado_atual.movimentosPossiveis()
-
-            for movimento in movimentos:
-                if movimento not in pontos_g or tentiva_ponto_g < pontos_g[movimento]:
-                    fila_prioridade.appendleft((tentiva_ponto_g + pecas_fora_do_lugar(movimento, movimento.estado_meta), movimento))
-                    pontos_g[movimento] = tentiva_ponto_g
-        return None
-
-
-
-# Exemplo de uso
-# estado_inicial = ...
-# estado_objetivo = busca_em_largura(estado_inicial)
-
-tabuleiro = Tabuleiro()
-tabuleiro.criar_tabuleiro(3)
-
-print(tabuleiro.tabuleiro)
-print(tabuleiro.estado_meta)
 
 puzzel = No()
-puzzel.tabuleiro = tabuleiro.tabuleiro
-puzzel.estado_meta = [[1,2,3],[4,5,6],[7,8,0]]
+puzzel.criarTabuleiro(3)
 
-# if ehObjetivo(((1,2,3),(4,5,6),(7,8,0))):
-#     print('fim da busca')
+# FUNC
+mostrarPrevia(puzzel)
+# busca = BuscaEmLargura.buscaEmLargura(puzzel)
+busca = BuscaAprofundamentoIterativo.buscar(puzzel)
 
-final = BuscaEmLargura.busca_em_largura(puzzel)
-# final = BuscaEmProfundidade.buscar(BuscaEmProfundidade, puzzel, puzzel.estado_meta)
-# a_estrela = AEstrela_h1.busca(puzzel)
-# print(a_estrela)
-# print(final)
-for i, estado in enumerate(final):
-        print('-' * 10 + f' Passo {i} ' + '-' * 10)
-        printarTabuleiro(estado.tabuleiro)
+if busca:
+    mostrarResultado(busca)
+else:
+    print("Nao foi possivel encontrar um resultado")

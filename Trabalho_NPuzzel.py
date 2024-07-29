@@ -127,7 +127,6 @@ class Tabuleiro:
         self.estado_meta = estado_meta
 
 
-
 class No(Tabuleiro):
     def __init__(self):
         self.pai = None
@@ -182,7 +181,7 @@ class No(Tabuleiro):
 
 
 class BuscaEmLargura:
-    def buscaEmLargura(estado_inicial):
+    def buscaEmLargura(estado_inicial: No):
         metricas_BFS = Metricas()
         metricas_BFS.comecarCronometro() # metrica
         fila = deque() 
@@ -210,6 +209,57 @@ class BuscaEmLargura:
                     metricas_BFS.nos_expandidos += 1 #metrica
                     fila.append(movimento)   
         return None
+    
+
+class BuscaAprofundamentoIterativo:
+    def buscar(self, inicio):
+        metricas_IDS = Metricas()
+        metricas_IDS.zerar_metricas() #limpar as métricas
+        metricas_IDS.comecarCronometro()
+        
+        profundidade = 0
+        
+        while True:
+            # print(f'PROFUNDIDADE_MAXIMA: {profundidade}')
+            
+            pilha = deque()
+            pilha.append((profundidade, inicio))
+            
+            interromper = False
+            
+            while not pilha.empty():
+                metricas_IDS.atualizaMemoria(pilha)
+                
+                d_pontuacao, estado_atual = pilha.popleft()  # desempilha (pega o último)
+                
+                if estado_atual.tabuleiro == estado_atual.estado_meta:
+                    interromper = True
+                    break
+                
+                if d_pontuacao <= 0:
+                    continue
+                # pobrema
+                caminho_atual = estado_atual.caminho() #
+
+                if estado_atual in caminho_atual[:-1]: #
+                    continue
+                
+                metricas_IDS.ciclos += 1
+                
+                for vizinho in estado_atual.expandir():
+                    metricas_IDS.atualizar_expandidos()
+                    
+                    pilha.append((d_pontuacao - 1, vizinho))
+                    
+            if interromper:
+                break
+                    
+            profundidade += 1
+
+        metricas_IDS.atualizar_caminho(estado_atual.caminho())
+        
+        metricas_IDS.atualizar_temporizador()
+
 
 def mostrarResultado(tupla_busca):
     metricas, passos = tupla_busca
