@@ -181,7 +181,7 @@ class No(Tabuleiro):
 
 
 class BuscaEmLargura:
-    def buscaEmLargura(estado_inicial: No):
+    def buscaEmLargura(self, estado_inicial: No):
         metricas_BFS = Metricas()
         metricas_BFS.comecarCronometro() # metrica
         fila = deque() 
@@ -212,7 +212,7 @@ class BuscaEmLargura:
     
 
 class BuscaAprofundamentoIterativo:
-    def buscar(inicio: No):
+    def buscar(self, inicio: No):
         metricas_IDS = Metricas()
         metricas_IDS.zerar_metricas() #limpar as métricas
         metricas_IDS.comecarCronometro()
@@ -228,7 +228,7 @@ class BuscaAprofundamentoIterativo:
             while len(pilha)>0:
                 metricas_IDS.atualizaMemoria(pilha)
                 
-                d_pontuacao, estado_atual = pilha.pop()  # desempilha (pega o último)
+                n_ponto, estado_atual = pilha.pop() 
                 
                 if estado_atual.tabuleiro == estado_atual.estado_meta:
                     interromper = True
@@ -236,9 +236,9 @@ class BuscaAprofundamentoIterativo:
 
                     break
                 
-                if d_pontuacao <= 0:
+                if n_ponto <= 0:
                     continue
-                # pobrema
+                
                 caminho_atual = estado_atual.passos() #
 
                 if estado_atual in caminho_atual[:-1]: #
@@ -249,16 +249,48 @@ class BuscaAprofundamentoIterativo:
                 for vizinho in estado_atual.movimentosPossiveis():
                     metricas_IDS.nos_expandidos += 1
                     
-                    pilha.append((d_pontuacao - 1, vizinho))
+                    pilha.append((n_ponto - 1, vizinho))
                     
             if interromper:
                 break
                     
             profundidade += 1
 
-        # metricas_IDS.atualizar_caminho(estado_atual.())
+class BuscaProfundidadeIterativa:
+    def __init__(self):
+        self.limite_prof = 30
+
+    def buscar(self, estado_inicial: No):
+        metricas_IDS = Metricas()
+        metricas_IDS.comecarCronometro() # metrica
         
-        # metricas_IDS.atualizar_temporizador()
+        pilha = deque()
+        vizinhos = set()
+        pilha.append((0, estado_inicial))
+
+        while len(pilha) > 0:
+            metricas_IDS.atualizaMemoria(pilha) # metrica
+    
+            nponto, estado_atual = pilha.pop()
+    
+            if estado_atual.tabuleiro == estado_atual.estado_meta:
+                passos = estado_atual.passos()
+                metricas_IDS.passos = len(passos)
+                metricas_IDS.finalizarCronometro() # metrica
+                return (metricas_IDS, passos) 
+
+            if nponto < 40:
+                vizinhos.add(tuple(map(tuple, estado_atual.tabuleiro)))
+                metricas_IDS.ciclos += 1 #metrica
+                movimentos = estado_atual.movimentosPossiveis()
+
+                for movimento in movimentos:
+                    mov_tabu = tuple(map(tuple, movimento.tabuleiro))
+
+                    if mov_tabu not in vizinhos:
+                        pilha.append((nponto+1, movimento))
+                        metricas_IDS.nos_expandidos += 1 #metrica
+
 
 
 def mostrarResultado(tupla_busca):
@@ -290,7 +322,8 @@ puzzel.criarTabuleiro(3)
 # FUNC
 mostrarPrevia(puzzel)
 # busca = BuscaEmLargura.buscaEmLargura(puzzel)
-busca = BuscaAprofundamentoIterativo.buscar(puzzel)
+# busca = BuscaAprofundamentoIterativo.buscar(BuscaAprofundamentoIterativo, puzzel)
+busca = BuscaProfundidadeIterativa.buscar(BuscaProfundidadeIterativa, puzzel)
 
 if busca:
     mostrarResultado(busca)
