@@ -262,67 +262,61 @@ class BuscaProfundidadeIterativa:
             profundidade += 1
 
 
-class BuscaAstrela():
-    # def __init__(self, h: Callable[[NPuzzleState, NPuzzleState], int]):
-    #     self.heuristica = h
-    
-    def marahtan(tabuleiro: No):
-        distance = 0
-        
-        for i1 in range(len(tabuleiro.tabuleiro)):
-            for j1 in range(len(tabuleiro.tabuleiro)):
-                value = tabuleiro.tabuleiro[i1][j1]
-                if value == 0:
-                    continue
-                
-                i2, j2 = tabuleiro.getPosicaoMeta(value)
-                
-                distance += abs(i1 - i2) + abs(j1 - j2)
-        
-        return distance    
+from heapq import heappop, heappush
+from itertools import count
 
-    def buscar(self, estado_inicial: No):
+class BuscaAstrela:
+    def marahtan(no):
+        distancia = 0
+        for x1 in range(len(no.tabuleiro)):
+            for y1 in range(len(no.tabuleiro)):
+                valor = no.tabuleiro[x1][y1]
+                if valor == 0:
+                    continue
+                x2, y2 = no.getPosicaoMeta(valor)
+                distancia += abs(x1 - x2) + abs(y1 - y2)
+        return distancia    
+
+    def buscar(self, estado_inicial):
         metricas_A = Metricas()
         metricas_A.zerar_metricas()
         metricas_A.comecarCronometro()
         
-        fila = deque()
-        fila.append((0, estado_inicial))
+        fila = []
+        contador = count()  # Contador único para cada nó
+        heappush(fila, (0, next(contador), estado_inicial))
 
         tabu_tupla = tuple(map(tuple, estado_inicial.tabuleiro))
         g_score = { tabu_tupla: 0 }
         
-        while not len(fila) < 0:
-
-            # self.update_memory(priority_queue)
+        while fila:
             metricas_A.atualizaMemoria()
             
-            f_score, estado_atual = fila.pop()
+            f, _, estado_atual = heappop(fila)
         
             if estado_atual.tabuleiro == estado_atual.estado_meta:
                 passos = estado_atual.passos()
                 metricas_A.passos = len(passos)
-                metricas_A.finalizarCronometro() # metrica
+                metricas_A.finalizarCronometro()
                 return (metricas_A, passos)
                 
             estado_atual_tupla = tuple(map(tuple, estado_atual.tabuleiro))
-            tentative_g_score = g_score[estado_atual_tupla] + 1        
             
-            # self.update_cycles()
             metricas_A.ciclos += 1
             movimentos = estado_atual.movimentosPossiveis()
 
-
             for vizinho in movimentos:
-
+                tentative_g_score = g_score[estado_atual_tupla] + 1        
                 tabu_vizinho_tupla = tuple(map(tuple, vizinho.tabuleiro))
                 if tabu_vizinho_tupla not in g_score or tentative_g_score < g_score[tabu_vizinho_tupla]:
-                    # self.update_expanded()
                     metricas_A.nos_expandidos += 1
                 
-                    fila.append((tentative_g_score + self.marahtan(vizinho), vizinho))
+                    heappush(fila, (tentative_g_score + self.marahtan(vizinho), next(contador), vizinho))
                     
                     g_score[tabu_vizinho_tupla] = tentative_g_score
+
+
+
              
         # self.update_path(current.path())
         
