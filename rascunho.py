@@ -5,6 +5,8 @@ Equipe:
     Adriano Kennedy Balbino do Nascimento Filho
 '''
 
+from heapq import heappop, heappush
+from itertools import count
 import random
 from collections import deque
 import time
@@ -262,20 +264,26 @@ class BuscaProfundidadeIterativa:
             profundidade += 1
 
 
-from heapq import heappop, heappush
-from itertools import count
-
 class BuscaAstrela:
-    def marahtan(no):
+    def manhattan(no):
+        posicao_meta = {}
+        tamanho = len(no.tabuleiro)
+        for x in range(tamanho):
+            for y in range(tamanho):
+                valor = no.estado_meta[x][y]
+                posicao_meta[valor] = (x, y)
+
         distancia = 0
-        for x1 in range(len(no.tabuleiro)):
-            for y1 in range(len(no.tabuleiro)):
+        for x1 in range(tamanho):
+            for y1 in range(tamanho):
                 valor = no.tabuleiro[x1][y1]
                 if valor == 0:
                     continue
-                x2, y2 = no.getPosicaoMeta(valor)
+                x2, y2 = posicao_meta[valor]
                 distancia += abs(x1 - x2) + abs(y1 - y2)
-        return distancia    
+        
+        return distancia
+   
 
     def buscar(self, estado_inicial):
         metricas_A = Metricas()
@@ -283,8 +291,7 @@ class BuscaAstrela:
         metricas_A.comecarCronometro()
         
         fila = []
-        contador = count()  # Contador único para cada nó
-        heappush(fila, (0, next(contador), estado_inicial))
+        heappush(fila, (0, id(estado_inicial), estado_inicial))
 
         tabu_tupla = tuple(map(tuple, estado_inicial.tabuleiro))
         g_score = { tabu_tupla: 0 }
@@ -311,16 +318,10 @@ class BuscaAstrela:
                 if tabu_vizinho_tupla not in g_score or tentative_g_score < g_score[tabu_vizinho_tupla]:
                     metricas_A.nos_expandidos += 1
                 
-                    heappush(fila, (tentative_g_score + self.marahtan(vizinho), next(contador), vizinho))
+                    heappush(fila, (tentative_g_score + self.manhattan(vizinho), id(vizinho), vizinho))
                     
                     g_score[tabu_vizinho_tupla] = tentative_g_score
 
-
-
-             
-        # self.update_path(current.path())
-        
-        # self.update_timer()
 
 
 def mostrarResultado(tupla_busca):
