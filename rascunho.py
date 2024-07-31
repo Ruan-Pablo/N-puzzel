@@ -57,7 +57,18 @@ class Tabuleiro:
             for coluna in range(len(self.tabuleiro)):
                 if self.tabuleiro[linha][coluna] == 0:
                     return linha, coluna
+
+    def getPosicao(self, valor):
+        for linha in range(len(self.tabuleiro)):
+            for coluna in range(len(self.tabuleiro)):
+                if self.tabuleiro[linha][coluna] == valor:
+                    return linha, coluna
                 
+    def getPosicaoMeta(self, valor):
+        for linha in range(len(self.estado_meta)):
+            for coluna in range(len(self.estado_meta)):
+                if self.estado_meta[linha][coluna] == valor:
+                    return linha, coluna
     def subir(self):
         pos_zero = self.getPosicaoPecaVazia()
         if pos_zero[0] > 0:
@@ -251,6 +262,73 @@ class BuscaProfundidadeIterativa:
             profundidade += 1
 
 
+class BuscaAstrela():
+    # def __init__(self, h: Callable[[NPuzzleState, NPuzzleState], int]):
+    #     self.heuristica = h
+    
+    def marahtan(tabuleiro: No):
+        distance = 0
+        
+        for i1 in range(len(tabuleiro.tabuleiro)):
+            for j1 in range(len(tabuleiro.tabuleiro)):
+                value = tabuleiro.tabuleiro[i1][j1]
+                if value == 0:
+                    continue
+                
+                i2, j2 = tabuleiro.getPosicaoMeta(value)
+                
+                distance += abs(i1 - i2) + abs(j1 - j2)
+        
+        return distance    
+
+    def buscar(self, estado_inicial: No):
+        metricas_A = Metricas()
+        metricas_A.zerar_metricas()
+        metricas_A.comecarCronometro()
+        
+        fila = deque()
+        fila.append((0, estado_inicial))
+
+        tabu_tupla = tuple(map(tuple, estado_inicial.tabuleiro))
+        g_score = { tabu_tupla: 0 }
+        
+        while not len(fila) < 0:
+
+            # self.update_memory(priority_queue)
+            metricas_A.atualizaMemoria()
+            
+            f_score, estado_atual = fila.pop()
+        
+            if estado_atual.tabuleiro == estado_atual.estado_meta:
+                passos = estado_atual.passos()
+                metricas_A.passos = len(passos)
+                metricas_A.finalizarCronometro() # metrica
+                return (metricas_A, passos)
+                
+            estado_atual_tupla = tuple(map(tuple, estado_atual.tabuleiro))
+            tentative_g_score = g_score[estado_atual_tupla] + 1        
+            
+            # self.update_cycles()
+            metricas_A.ciclos += 1
+            movimentos = estado_atual.movimentosPossiveis()
+
+
+            for vizinho in movimentos:
+
+                tabu_vizinho_tupla = tuple(map(tuple, vizinho.tabuleiro))
+                if tabu_vizinho_tupla not in g_score or tentative_g_score < g_score[tabu_vizinho_tupla]:
+                    # self.update_expanded()
+                    metricas_A.nos_expandidos += 1
+                
+                    fila.append((tentative_g_score + self.marahtan(vizinho), vizinho))
+                    
+                    g_score[tabu_vizinho_tupla] = tentative_g_score
+             
+        # self.update_path(current.path())
+        
+        # self.update_timer()
+
+
 def mostrarResultado(tupla_busca):
     metricas, passos = tupla_busca
     for i, estado in enumerate(passos):
@@ -281,7 +359,8 @@ puzzel.criarTabuleiro(3)
 mostrarPrevia(puzzel)
 # busca = BuscaEmLargura.buscaEmLargura(puzzel)
 # busca = BuscaAprofundamentoIterativo.buscar(BuscaAprofundamentoIterativo, puzzel)
-busca = BuscaProfundidadeIterativa.buscar(BuscaProfundidadeIterativa, puzzel)
+# busca = BuscaProfundidadeIterativa.buscar(BuscaProfundidadeIterativa, puzzel)
+busca = BuscaAstrela.buscar(BuscaAstrela, puzzel)
 
 if busca:
     mostrarResultado(busca)

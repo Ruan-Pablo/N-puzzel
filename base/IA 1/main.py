@@ -19,8 +19,8 @@ goal = NPuzzleState.goal(8)
 solvers: dict[str, Search] = {
     # 'BFS': BreadthFirstSearch(),
     'IDS': IterativeDeepeningSearch(),
-    # 'ASTAR_H1': AStarSearch(NPuzzleState.tiles_out_of_place),
-    # 'ASTAR_H2': AStarSearch(NPuzzleState.manhattan_distance),
+    'ASTAR_H1': AStarSearch(NPuzzleState.tiles_out_of_place),
+    'ASTAR_H2': AStarSearch(NPuzzleState.manhattan_distance),
     # 'BIDIRECTIONAL_ASTAR_H1': BidirectionalAStarSearch(NPuzzleState.tiles_out_of_place),
     # 'BIDIRECTIONAL_ASTAR_H2': BidirectionalAStarSearch(NPuzzleState.manhattan_distance)
 }
