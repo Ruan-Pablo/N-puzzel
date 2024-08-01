@@ -1,8 +1,12 @@
 '''
 1° Atividade de IA
 Equipe: 
+    Rian Rodrigues Mourão
     Ruan Pablo de Sousa Estácio
-    Adriano Kennedy Balbino do Nascimento Filho
+
+Obs.: pedimos desculpas pela bagunça, foi um tanto quanto corrido e
+acabou que teve alguns conceitos que não nos tocamos de usar e so fomos 
+perceber depois, daí acabou ficando um pouco bagunçado, mas ta entregando tudo ok kkk
 '''
 
 from heapq import heappop, heappush
@@ -60,17 +64,6 @@ class Tabuleiro:
                 if self.tabuleiro[linha][coluna] == 0:
                     return linha, coluna
 
-    def getPosicao(self, valor):
-        for linha in range(len(self.tabuleiro)):
-            for coluna in range(len(self.tabuleiro)):
-                if self.tabuleiro[linha][coluna] == valor:
-                    return linha, coluna
-                
-    def getPosicaoMeta(self, valor):
-        for linha in range(len(self.estado_meta)):
-            for coluna in range(len(self.estado_meta)):
-                if self.estado_meta[linha][coluna] == valor:
-                    return linha, coluna
     def subir(self):
         pos_zero = self.getPosicaoPecaVazia()
         if pos_zero[0] > 0:
@@ -314,12 +307,12 @@ class BuscaAstrela:
         heappush(fila, (0, id(estado_inicial), estado_inicial))
 
         tabu_tupla = tuple(map(tuple, estado_inicial.tabuleiro))
-        g_score = { tabu_tupla: 0 }
+        g_pontos = { tabu_tupla: 0 }
         
         while fila:
             metricas_A.atualizaMemoria()
             
-            f, _, estado_atual = heappop(fila)
+            ignora, _, estado_atual = heappop(fila)
         
             if estado_atual.tabuleiro == estado_atual.estado_meta:
                 passos = estado_atual.passos()
@@ -333,14 +326,14 @@ class BuscaAstrela:
             movimentos = estado_atual.movimentosPossiveis()
 
             for vizinho in movimentos:
-                tentative_g_score = g_score[estado_atual_tupla] + 1        
+                tentativa_g = g_pontos[estado_atual_tupla] + 1        
                 tabu_vizinho_tupla = tuple(map(tuple, vizinho.tabuleiro))
-                if tabu_vizinho_tupla not in g_score or tentative_g_score < g_score[tabu_vizinho_tupla]:
+                if tabu_vizinho_tupla not in g_pontos or tentativa_g < g_pontos[tabu_vizinho_tupla]:
                     metricas_A.nos_expandidos += 1
                 
-                    heappush(fila, (tentative_g_score + self.heuristica(vizinho), id(vizinho), vizinho))
+                    heappush(fila, (tentativa_g + self.heuristica(vizinho), id(vizinho), vizinho))
                     
-                    g_score[tabu_vizinho_tupla] = tentative_g_score
+                    g_pontos[tabu_vizinho_tupla] = tentativa_g
 
 
 
