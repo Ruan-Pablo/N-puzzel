@@ -156,7 +156,7 @@ class NPuzzleState:
                 i2, j2 = goal.find(value)
                 
                 distance += abs(i1 - i2) + abs(j1 - j2)
-        
+        print(distance)
         return distance
 
     @staticmethod 
