@@ -5,6 +5,8 @@ Equipe:
     Adriano Kennedy Balbino do Nascimento Filho
 '''
 
+from heapq import heappop, heappush
+from itertools import count
 import random
 from collections import deque
 import time
@@ -57,7 +59,18 @@ class Tabuleiro:
             for coluna in range(len(self.tabuleiro)):
                 if self.tabuleiro[linha][coluna] == 0:
                     return linha, coluna
+
+    def getPosicao(self, valor):
+        for linha in range(len(self.tabuleiro)):
+            for coluna in range(len(self.tabuleiro)):
+                if self.tabuleiro[linha][coluna] == valor:
+                    return linha, coluna
                 
+    def getPosicaoMeta(self, valor):
+        for linha in range(len(self.estado_meta)):
+            for coluna in range(len(self.estado_meta)):
+                if self.estado_meta[linha][coluna] == valor:
+                    return linha, coluna
     def subir(self):
         pos_zero = self.getPosicaoPecaVazia()
         if pos_zero[0] > 0:
@@ -179,9 +192,43 @@ class No(Tabuleiro):
         passos.reverse()
         return passos
 
+    def pecas_fora_do_lugar(no):
+        pos_meta = {}
+        tamanho = len(no.tabuleiro)
+        fora = 0
+        for i in range(tamanho):
+            for j in range(tamanho):
+                valor = no.estado_meta[i][j]
+                pos_meta[valor] = (i, j)
+        for i in range(tamanho):
+            for j in range(tamanho):
+                valor = no.tabuleiro[i][j]
+                if pos_meta[valor] != (i, j):
+                    fora += 1
+        return fora
+
+
+    def manhattan(no):
+        posicao_meta = {}
+        tamanho = len(no.tabuleiro)
+        for x in range(tamanho):
+            for y in range(tamanho):
+                valor = no.estado_meta[x][y]
+                posicao_meta[valor] = (x, y)
+
+        distancia = 0
+        for x1 in range(tamanho):
+            for y1 in range(tamanho):
+                valor = no.tabuleiro[x1][y1]
+                if valor == 0:
+                    continue
+                x2, y2 = posicao_meta[valor]
+                distancia += abs(x1 - x2) + abs(y1 - y2)
+        
+        return distancia
 
 class BuscaEmLargura:
-    def buscaEmLargura(estado_inicial: No):
+    def buscar(self, estado_inicial: No):
         metricas_BFS = Metricas()
         metricas_BFS.comecarCronometro() # metrica
         fila = deque() 
@@ -211,66 +258,102 @@ class BuscaEmLargura:
         return None
     
 
-class BuscaAprofundamentoIterativo:
-    def buscar(self, inicio):
+class BuscaProfundidadeIterativa:
+    def buscar(self, estado_inicial: No):
         metricas_IDS = Metricas()
-        metricas_IDS.zerar_metricas() #limpar as métricas
-        metricas_IDS.comecarCronometro()
+        metricas_IDS.comecarCronometro() # metrica
         
         profundidade = 0
-        
-        while True:
-            # print(f'PROFUNDIDADE_MAXIMA: {profundidade}')
-            
-            pilha = deque()
-            pilha.append((profundidade, inicio))
-            
-            interromper = False
-            
-            while not pilha.empty():
-                metricas_IDS.atualizaMemoria(pilha)
-                
-                d_pontuacao, estado_atual = pilha.popleft()  # desempilha (pega o último)
-                
-                if estado_atual.tabuleiro == estado_atual.estado_meta:
-                    interromper = True
-                    break
-                
-                if d_pontuacao <= 0:
-                    continue
-                # pobrema
-                caminho_atual = estado_atual.caminho() #
 
-                if estado_atual in caminho_atual[:-1]: #
+        while True:
+            pilha = deque()
+            vizinhos = set()
+            pilha.append((0, estado_inicial))
+
+            while len(pilha) > 0:
+                metricas_IDS.atualizaMemoria(pilha) # metrica
+
+                nponto, estado_atual = pilha.pop()
+
+                if estado_atual.tabuleiro == estado_atual.estado_meta:
+                    passos = estado_atual.passos()
+                    metricas_IDS.passos = len(passos)
+                    metricas_IDS.finalizarCronometro() # metrica
+                    return (metricas_IDS, passos) 
+
+                if nponto >= profundidade:
                     continue
-                
-                metricas_IDS.ciclos += 1
-                
-                for vizinho in estado_atual.expandir():
-                    metricas_IDS.atualizar_expandidos()
-                    
-                    pilha.append((d_pontuacao - 1, vizinho))
-                    
-            if interromper:
-                break
-                    
+
+                vizinhos.add(tuple(map(tuple, estado_atual.tabuleiro)))
+                metricas_IDS.ciclos += 1 #metrica
+                movimentos = estado_atual.movimentosPossiveis()
+
+                for movimento in movimentos:
+                    mov_tabu = tuple(map(tuple, movimento.tabuleiro))
+
+                    if mov_tabu not in vizinhos:
+                        pilha.append((nponto+1, movimento))
+                        metricas_IDS.nos_expandidos += 1 #metrica
+
             profundidade += 1
 
-        metricas_IDS.atualizar_caminho(estado_atual.caminho())
+
+class BuscaAstrela:
+    def __init__(self, h, estado_inicial):
+        self.heuristica = h
+        self.estado = estado_inicial
+   
+
+    def buscar(self):
+        metricas_A = Metricas()
+        metricas_A.zerar_metricas()
+        metricas_A.comecarCronometro()
+        estado_inicial = self.estado
+
+        fila = []
+        heappush(fila, (0, id(estado_inicial), estado_inicial))
+
+        tabu_tupla = tuple(map(tuple, estado_inicial.tabuleiro))
+        g_score = { tabu_tupla: 0 }
         
-        metricas_IDS.atualizar_temporizador()
+        while fila:
+            metricas_A.atualizaMemoria()
+            
+            f, _, estado_atual = heappop(fila)
+        
+            if estado_atual.tabuleiro == estado_atual.estado_meta:
+                passos = estado_atual.passos()
+                metricas_A.passos = len(passos)
+                metricas_A.finalizarCronometro()
+                return (metricas_A, passos)
+                
+            estado_atual_tupla = tuple(map(tuple, estado_atual.tabuleiro))
+            
+            metricas_A.ciclos += 1
+            movimentos = estado_atual.movimentosPossiveis()
+
+            for vizinho in movimentos:
+                tentative_g_score = g_score[estado_atual_tupla] + 1        
+                tabu_vizinho_tupla = tuple(map(tuple, vizinho.tabuleiro))
+                if tabu_vizinho_tupla not in g_score or tentative_g_score < g_score[tabu_vizinho_tupla]:
+                    metricas_A.nos_expandidos += 1
+                
+                    heappush(fila, (tentative_g_score + self.heuristica(vizinho), id(vizinho), vizinho))
+                    
+                    g_score[tabu_vizinho_tupla] = tentative_g_score
+
 
 
 def mostrarResultado(tupla_busca):
     metricas, passos = tupla_busca
-    for i, estado in enumerate(passos):
-        print(f"""
+    if passos != 0:
+        for i, estado in enumerate(passos):
+            print(f"""
            {estado.tabuleiro[0]}
 Passo {i:02d}:  {estado.tabuleiro[1]}
            {estado.tabuleiro[2]}""")
         
-    print(f"""
---------- Metricas calculadas ---------
+    print(f"""--------- Metricas calculadas ---------
 Quantidade de passos:  {metricas.passos - 1}
 Tempo:                 {metricas.tempo_execucao:.3f} segundos
 Maximo de memoria:     {metricas.memoria} bytes
@@ -287,11 +370,29 @@ def mostrarPrevia(puzzel):
 puzzel = No()
 puzzel.criarTabuleiro(3)
 
-# FUNC
+# Init
 mostrarPrevia(puzzel)
-busca = BuscaEmLargura.buscaEmLargura(puzzel)
 
-if busca:
-    mostrarResultado(busca)
-else:
-    print("Nao foi possivel encontrar um resultado")
+# EXEC
+buscas = {
+    'BFS' : BuscaEmLargura.buscar(BuscaEmLargura,puzzel),
+    'IDS' : BuscaProfundidadeIterativa.buscar(BuscaProfundidadeIterativa, puzzel),
+    'A* Manhattan' : BuscaAstrela(No.manhattan, puzzel).buscar(),
+    'A* Pecas Fora' : BuscaAstrela(No.pecas_fora_do_lugar, puzzel).buscar()
+}
+
+metricas_geral = {}
+
+for busca in buscas:
+    print(f"---------- {busca} -----------")
+    resultado = buscas[busca]
+    if busca:
+        mostrarResultado(resultado)
+        metricas_geral[busca] = (resultado[0], 0)
+    else:
+        print("Nao foi possivel encontrar um resultado")
+print('\n\n')
+print('-------- GERAL --------\n')
+for i in metricas_geral:
+    print(f'\n{i}: ')
+    mostrarResultado(metricas_geral[i])

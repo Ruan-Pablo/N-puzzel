@@ -147,25 +147,38 @@ class No(Tabuleiro):
 
 puzzel = No()
 puzzel.criarTabuleiro(3)
-print(puzzel.tabuleiro)
-t= [[1,2,3],[4,5,6],[7,8,0]]
+
 p = tuple(map(tuple, puzzel.tabuleiro))
 tabu_tupla = tuple(map(tuple, [[1,2,3],[4,5,6],[7,8,0]]))
 
-def marahtan(start, goal):
-    distance = 0
+meta = [[1,2,3],[4,5,6],[7,8,0]]
+control = [[1,2,3],[4,5,0],[7,8,6]]
+
+dic = {}
+nome = 'bfs'
+valor = ('met','passo')
+dic[nome] = valor
+print(dic)
+
+
+def getPosicaoMeta(estado_meta, valor):
+    for linha in range(len(estado_meta)):
+        for coluna in range(len(estado_meta)):
+            if estado_meta[linha][coluna] == valor:
+                return linha, coluna
+
+def marahtan(estado, meta):
+    distancia = 0
     
-    for i1 in range(len(start)):
-        for j1 in range(len(start)):
-            value = start[i1][j1]
-            
-            if value == 0:
+    for x1 in range(len(estado)):
+        for y1 in range(len(estado)):
+            valor = estado[x1][y1]
+            if valor == 0:
                 continue
             
-            i2, j2 = goal.find(value)
+            x2, y2 = getPosicaoMeta(meta, valor)
             
-            distance += abs(i1 - i2) + abs(j1 - j2)
-    
-    return distance   
+            distancia += abs(x1 - x2) + abs(y1 - y2)
+    return distancia     
 
-print(marahtan(puzzel.tabuleiro, t))
+# print(marahtan(puzzel.tabuleiro, t))
