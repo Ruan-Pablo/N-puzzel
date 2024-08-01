@@ -1,9 +1,4 @@
-'''
-1° Atividade de IA
-Equipe: 
-    Ruan Pablo de Sousa Estácio
-    Adriano Kennedy Balbino do Nascimento Filho
-'''
+
 
 from heapq import heappop, heappush
 from itertools import count
@@ -226,6 +221,7 @@ class No(Tabuleiro):
                 distancia += abs(x1 - x2) + abs(y1 - y2)
         
         return distancia
+
 
 class BuscaEmLargura:
     def buscar(self, estado_inicial: No):

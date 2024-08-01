@@ -147,7 +147,7 @@ class No(Tabuleiro):
 
 puzzel = No()
 puzzel.criarTabuleiro(3)
-
+print(puzzel.tabuleiro)
 p = tuple(map(tuple, puzzel.tabuleiro))
 tabu_tupla = tuple(map(tuple, [[1,2,3],[4,5,6],[7,8,0]]))
 

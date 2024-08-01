@@ -362,7 +362,7 @@ def mostrarPrevia(puzzel):
 
 puzzel = No()
 puzzel.criarTabuleiro(3)
-
+puzzel.tabuleiro = [[5, 7, 0], [2, 1, 4], [8, 6, 3]] # Valor pra teste
 # Init
 mostrarPrevia(puzzel)
 
@@ -370,8 +370,8 @@ mostrarPrevia(puzzel)
 buscas = {
     'BFS' : BuscaEmLargura.buscar(BuscaEmLargura,puzzel),
     'IDS' : BuscaProfundidadeIterativa.buscar(BuscaProfundidadeIterativa, puzzel),
-    'A* Manhattan' : BuscaAstrela(No.manhattan, puzzel).buscar(),
-    'A* Pecas Fora' : BuscaAstrela(No.pecas_fora_do_lugar, puzzel).buscar()
+    'A* Pecas Fora' : BuscaAstrela(No.pecas_fora_do_lugar, puzzel).buscar(),
+    'A* Manhattan' : BuscaAstrela(No.manhattan, puzzel).buscar()
 }
 
 metricas_geral = {}
